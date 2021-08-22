@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--
+    namespace : 命名空间  传入业务接口
+    is ： 唯一标识
+    resultType : 返回值类型
+-->
+
+<!--命名空间填写接口-->
+<mapper namespace="com.jiayang.crud.dao.UserDao">
+
+    <!--根据部门id 返回这个部门所有员工-->
+    <resultMap type="com.jiayang.crud.pojo.User" id="query_dep_id_list">
+        <id column="user_id" property="id"></id>
+        <result column="user_name" property="name"></result>
+        <result column="gender" property="gender"></result>
+        <result column="email" property="email"></result>
+        <result column="id" property="dep.id"></result>
+        <result column="name" property="dep.name"></result>
+    </resultMap>
+
+    <!--根据部门id 返回这个部门所有员工-->
+    <resultMap type="com.jiayang.crud.pojo.User" id="query_dep_id_user">
+        <id column="user_id" property="id"></id>
+        <result column="user_name" property="name"></result>
+        <result column="gender" property="gender"></result>
+        <result column="email" property="email"></result>
+        <result column="id" property="dep.id"></result>
+        <result column="name" property="dep.name"></result>
+    </resultMap>
+
+    <select id="getListByDepId" resultMap="query_dep_id_list">
+        select user.id as user_id,user.name as user_name,gender,email,department.id,department.name
+        from user join department on user.department_id = department.id
+        where department_id = #{id}
+    </select>
+
+
+    <select id="getUserById" resultMap="query_dep_id_user">
+        select user.id as user_id,user.name as user_name,gender,email,department.id,department.name
+        from user join department on user.department_id = department.id
+        where user.id = #{id}
+    </select>
+
+    <insert id="save" >
+        insert into user(name,gender,email,department_id)
+        values(#{name},#{gender},#{email},#{department_id})
+    </insert>
+
+    <!--更新用户信息，有啥改啥 @amp=& @quot=" -->
+    <update id="updateHasWay">
+        update user
+        <set>
+            <if test="name != null &amp;&amp; name.trim() != &quot;&quot;">
+                name = #{name},
+            </if>
+            <if test="email != null &amp;&amp; email.trim() != &quot;&quot;">
+                email = #{email},
+            </if>
+            <if test="gender != null &amp;&amp; gender.trim() != &quot;&quot;">
+                gender = #{gender},
+            </if>
+                department_id = #{department_id}
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--根据 id 删除用户-->
+    <delete id="deleteUserById">
+        delete from user where id = #{id}
+    </delete>
+
+    <!--查询所有员工信息-->
+    <select id="getAllUser" resultMap="query_dep_id_list">
+        select user.id as user_id,user.name as user_name,gender,email,department.id,department.name
+        from user join department on user.department_id = department.id
+        order by user.id
+    </select>
+
+    <!--查询名字出现了多少次-->
+    <select id="getNameCount" resultType="java.lang.Integer">
+        select count(*) from user where name = #{name}
+    </select>
+
+    <!--查询email出现了多少次-->
+    <select id="getEmailCount" resultType="java.lang.Integer">
+        select count(*) from user where email = #{email}
+    </select>
+
+    <!--针对搜索框进行模糊查询-->
+    <select id="getUserByLikeName" resultMap="query_dep_id_user">
+        select user.id as user_id,user.name as user_name,gender,email,department.id,department.name
+        from user join department on user.department_id = department.id
+        where user.name like #{nameVal}
+    </select>
+
+</mapper>

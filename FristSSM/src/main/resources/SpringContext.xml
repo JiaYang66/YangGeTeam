@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.alibaba.com/schema/stat http://www.alibaba.com/schema/stat.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+
+    <context:property-placeholder location="classpath:datadase.properties"/>
+
+    <context:component-scan base-package="com.jiayang">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--配置数据库信息-->
+    <bean id="dataSore" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${db.drive}"></property>
+        <property name="url" value="${db.url}"></property>
+        <property name="username" value="${db.name}"></property>
+        <property name="password" value="${db.password}"></property>
+    </bean>
+
+    <!--创建SQLSessionFactory SQLSessionFactoryBean-->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSore"></property>
+        <!--配置好哪些类需要别名-->
+        <property name="typeAliasesPackage" value="com.jiayang.crud.pojo"></property>
+        <!--配置要绑定的xml，记住以后的Mapper 都存在这个包下-->
+        <property name="mapperLocations">
+            <list>
+                <value>classpath:Mapper/*Mapper.xml</value>
+            </list>
+        </property>
+        <!--pageHelper-->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <!--使用下面的方式配置参数，一行配置一个 -->
+                        <value>
+                            helperDialect=postgresql
+                            reasonable=true
+                            supportMethodsArguments=true
+                            params=count=countSql
+                            autoRuntimeDialect=true
+                        </value>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+
+    <bean id="scanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryBean"></property>
+        <property name="basePackage" value="com.jiayang.crud.dao"></property>
+    </bean>
+
+    <!--配置事务-->
+    <bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSore"></property>
+    </bean>
+
+
+    <tx:advice id="userServiceTX" transaction-manager="dataSourceTransactionManager">
+        <tx:attributes>
+            <tx:method name="query*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="userService" expression="execution(* com.jiayang.crud.service.*.* (..))"/>
+        <aop:advisor advice-ref="userServiceTX" pointcut-ref="userService"></aop:advisor>
+    </aop:config>
+
+</beans>
