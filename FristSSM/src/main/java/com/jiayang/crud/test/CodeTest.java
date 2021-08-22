@@ -18,12 +18,6 @@ public class CodeTest {
     public static void main(String[] args) {
         ApplicationContext con = new ClassPathXmlApplicationContext("SpringContext.xml");
 
-        departmentDao bean = con.getBean(departmentDao.class);
-
-        List<department> list = bean.getDepsByLikeName("销售部");
-
-        System.out.println(list);
-
 
     }
 }
